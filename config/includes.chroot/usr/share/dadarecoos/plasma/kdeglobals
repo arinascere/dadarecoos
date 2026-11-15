@@ -1,0 +1,12 @@
+[General]
+font=Inter,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1
+menuFont=Inter,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1
+toolBarFont=Inter,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1
+smallestReadableFont=Inter,8,-1,5,400,0,0,0,0,0,0,0,0,0,0,1
+AccentColor=180,167,245
+
+[KDE]
+LookAndFeelPackage=org.dadarecoos.desktop
+
+[WM]
+activeFont=Inter,10,-1,5,600,0,0,0,0,0,0,0,0,0,0,1

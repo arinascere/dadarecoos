@@ -1,21 +1,32 @@
 [Unit]
-Description=DadarecoOS installer (cage + Calamares)
-After=systemd-user-sessions.service NetworkManager.service plymouth-quit-wait.service
+Description=DadarecoOS: instalador (cage + Calamares)
+# Só existe no pendrive. No sistema instalado esta condição é falsa (e o
+# post-install.sh ainda apaga este arquivo).
+ConditionKernelCommandLine=boot=live
+After=systemd-user-sessions.service systemd-logind.service dbus.socket NetworkManager.service getty@tty1.service
+Wants=dbus.socket systemd-logind.service
 Conflicts=getty@tty1.service
 
 [Service]
 Type=simple
-# ponytail: roda como root com libseat builtin; Calamares precisa de root. Trocar por sessão logind se der problema.
-Environment=XDG_RUNTIME_DIR=/run/dadareco-xdg
-Environment=LIBSEAT_BACKEND=builtin
-Environment=WLR_NO_HARDWARE_CURSORS=1
-ExecStartPre=/usr/bin/install -d -m 0700 /run/dadareco-xdg
-ExecStartPre=/usr/lib/dadarecoos/detect-hw.sh
-ExecStart=/usr/bin/cage -s -- /usr/lib/dadarecoos/installer-wrapper.sh
+User=root
+PAMName=login
 TTYPath=/dev/tty1
-StandardInput=tty
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+StandardInput=tty-fail
 StandardOutput=journal
+StandardError=journal
+UtmpIdentifier=tty1
+UtmpMode=user
+Environment=XKB_DEFAULT_LAYOUT=br
+Environment=QT_QPA_PLATFORM=wayland
+Environment=WLR_NO_HARDWARE_CURSORS=1
+ExecStartPre=-/usr/lib/dadarecoos/detect-hw.sh
+ExecStart=/usr/bin/cage -s -- /usr/lib/dadarecoos/installer-wrapper.sh
 Restart=on-failure
+RestartSec=3
 
 [Install]
 WantedBy=multi-user.target

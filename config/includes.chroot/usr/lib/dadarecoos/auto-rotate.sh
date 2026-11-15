@@ -1,6 +1,6 @@
 #!/bin/bash
 # Rotação automática no niri, via sensor (iio-sensor-proxy).
-# ponytail: mapa de ângulos pode vir invertido conforme o aparelho. Se girar errado, trocar 90 <-> 270 abaixo.
+# ponytail: o mapa de ângulos pode vir invertido conforme o aparelho. Se girar errado, trocar 90 <-> 270.
 out=$(niri msg -j outputs | jq -r 'keys[0]')
 [ -n "$out" ] || exit 1
 monitor-sensor --accel | while read -r line; do

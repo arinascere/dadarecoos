@@ -1,54 +1,58 @@
-# Sistema live = também a base copiada para o disco (squashfs). Mantém enxuto.
+# Sistema live = também a base copiada para o disco (squashfs). Manter enxuto:
+# tudo que é desktop vem da internet na instalação.
 
 # base
 systemd-sysv
+libpam-systemd
+dbus-user-session
 live-boot
 live-config
+live-config-systemd
 linux-image-amd64
 sudo
 locales
 console-setup
 keyboard-configuration
+ca-certificates
+curl
 
-# bootloader (instalado no disco pelo Calamares)
-grub-efi-amd64
-grub-efi-amd64-bin
-grub-pc-bin
-efibootmgr
-
-# instalador (Wayland kiosk: cage + Calamares)
+# instalador (Wayland kiosk: cage + Calamares com a base de configuração do Debian)
 calamares
+calamares-settings-debian
+qt6-wayland
 cage
 foot
+libgl1-mesa-dri
+libegl-mesa0
+libgles2
+fonts-inter
+fonts-dejavu-core
+qt6-virtualkeyboard-plugin
 squashfs-tools
-rsync
-parted
-gdisk
-e2fsprogs
+os-prober
+btrfs-progs
 dosfstools
+e2fsprogs
 ntfs-3g
-cryptsetup
+pciutils
+usbutils
+mokutil
 
-# rede: precisa conectar ANTES de instalar (cabo, Wi-Fi ou tethering USB)
+# rede: precisa conectar ANTES de instalar (cabo, Wi-Fi ou tethering USB do celular)
 network-manager
 wpasupplicant
-usb-modeswitch
-modemmanager
+iw
 wireless-regdb
+usb-modeswitch
 
-# firmwares: tudo que cobre rede, Bluetooth e vídeo comuns
-firmware-linux
+# firmwares: rede, Bluetooth e vídeo mais comuns
+firmware-linux-free
+firmware-linux-nonfree
 firmware-misc-nonfree
 firmware-iwlwifi
 firmware-realtek
 firmware-atheros
 firmware-brcm80211
-firmware-amd-graphics
+firmware-mediatek
 firmware-intel-graphics
-
-# detecção de hardware (usada por detect-hw.sh e post-install.sh)
-pciutils
-usbutils
-udev
-mokutil
-wvkbd
+firmware-amd-graphics

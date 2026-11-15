@@ -1,0 +1,10 @@
+
+// DadarecoOS: ajustes de toque (anexado quando "tela sensível ao toque" é marcado).
+// O squeekboard abre sozinho ao tocar num campo de texto (protocolo input-method).
+// ponytail: o niri não tem gestos de toque; navegação é pelos botões do Noctalia.
+spawn-at-startup "squeekboard"
+spawn-at-startup "dadareco-auto-rotate"
+switch-events {
+    tablet-mode-on  { spawn "busctl" "call" "--user" "sm.puri.OSK0" "/sm/puri/OSK0" "sm.puri.OSK0" "SetVisible" "b" "true"; }
+    tablet-mode-off { spawn "busctl" "call" "--user" "sm.puri.OSK0" "/sm/puri/OSK0" "sm.puri.OSK0" "SetVisible" "b" "false"; }
+}

@@ -1,0 +1,103 @@
+name: Build packages
+
+# niri e xwayland-satellite não existem no Debian 13. Este workflow compila os dois,
+# monta um repositório apt simples e publica na Release "pkgs". O instalador usa esse
+# repositório (ver prepare-apt.sh).
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/build-packages.yml"]
+
+env:
+  NIRI_TAG: v26.04
+  XWS_TAG: v0.8.3
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: debian:trixie
+    steps:
+      - name: Dependências
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends build-essential clang curl git ca-certificates pkg-config \
+            dpkg-dev apt-utils libudev-dev libgbm-dev libxkbcommon-dev libegl1-mesa-dev libwayland-dev \
+            libinput-dev libdbus-1-dev libsystemd-dev libseat-dev libpipewire-0.3-dev libpango1.0-dev \
+            libdisplay-info-dev libxcb1-dev libxcb-cursor-dev
+          curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - uses: actions/checkout@v4
+        with:
+          path: src
+      - name: niri
+        run: |
+          cargo install cargo-deb --locked
+          git clone --depth 1 --branch "$NIRI_TAG" https://github.com/YaLTeR/niri
+          cd niri
+          # o Cargo.toml fixa as dependências; "$auto" acrescenta as bibliotecas (dpkg-shlibdeps)
+          sed -i 's/^depends = "alacritty, fuzzel"/depends = "$auto, alacritty, fuzzel"/' Cargo.toml
+          grep -n '^depends' Cargo.toml
+          cargo deb
+          mkdir -p ../repo && cp target/debian/*.deb ../repo/
+      - name: xwayland-satellite
+        run: |
+          git clone --depth 1 --branch "$XWS_TAG" https://github.com/Supreeeme/xwayland-satellite
+          cd xwayland-satellite
+          cargo build --release --locked
+          mkdir -p pkg/DEBIAN pkg/usr/bin debian && touch debian/control
+          install -m 0755 target/release/xwayland-satellite pkg/usr/bin/
+          deps=$(dpkg-shlibdeps -O pkg/usr/bin/xwayland-satellite | sed 's/^shlibs:Depends=//')
+          cat > pkg/DEBIAN/control <<CTL
+          Package: xwayland-satellite
+          Version: ${XWS_TAG#v}-1
+          Architecture: amd64
+          Maintainer: DadarecoOS <noreply@github.com>
+          Depends: $deps, xwayland
+          Section: x11
+          Priority: optional
+          Homepage: https://github.com/Supreeeme/xwayland-satellite
+          Description: Xwayland fora do compositor (apps X11 no niri)
+           Compilado pelo CI da DadarecoOS a partir do código oficial, tag $XWS_TAG.
+          CTL
+          sed -i 's/^          //' pkg/DEBIAN/control
+          dpkg-deb --root-owner-group --build pkg "../repo/xwayland-satellite_${XWS_TAG#v}-1_amd64.deb"
+      - name: Repositório apt
+        run: |
+          cd repo
+          apt-ftparchive packages . > Packages
+          gzip -9 -k Packages
+          apt-ftparchive release . > Release
+          ls -la; cat Packages | grep -E '^(Package|Version|Depends|Filename)'
+      - name: Teste (instala e valida o config do niri)
+        run: |
+          echo "deb [trusted=yes] file://$PWD/repo ./" > /etc/apt/sources.list.d/local.list
+          apt-get update
+          apt-get install -y --no-install-recommends niri xwayland-satellite
+          niri --version
+          niri validate -c src/config/includes.chroot/usr/share/dadarecoos/niri/config.kdl
+          cat src/config/includes.chroot/usr/share/dadarecoos/niri/config.kdl \
+              src/config/includes.chroot/usr/share/dadarecoos/niri/touch.kdl > /tmp/touch.kdl
+          niri validate -c /tmp/touch.kdl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: repo
+          path: repo/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: repo
+          path: repo
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: pkgs
+          name: "Pacotes (repositório apt da DadarecoOS)"
+          body: "Uso interno do instalador. niri e xwayland-satellite compilados pelo CI. Não é a ISO."
+          prerelease: true
+          files: repo/*

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=DadarecoOS: aparência inicial
+Exec=/usr/lib/dadarecoos/plasma-firstrun.sh
+OnlyShowIn=KDE;
+X-KDE-autostart-phase=1
+NoDisplay=true

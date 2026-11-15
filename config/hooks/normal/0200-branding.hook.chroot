@@ -1,0 +1,17 @@
+#!/bin/sh
+# Nome da distro. ID continua "debian" para scripts de terceiros (Steam, Jellyfin) funcionarem.
+set -e
+rm -f /etc/os-release
+cat > /etc/os-release <<'OS'
+PRETTY_NAME="DadarecoOS 0.2 (base Debian 13)"
+NAME="DadarecoOS"
+VERSION_ID="13"
+VERSION="0.2"
+VERSION_CODENAME=trixie
+DEBIAN_VERSION_FULL=13
+ID=debian
+HOME_URL="https://github.com/arinascere/dadarecoos"
+SUPPORT_URL="https://github.com/arinascere/dadarecoos/issues"
+BUG_REPORT_URL="https://github.com/arinascere/dadarecoos/issues"
+OS
+echo "DadarecoOS 0.2 \n \l" > /etc/issue

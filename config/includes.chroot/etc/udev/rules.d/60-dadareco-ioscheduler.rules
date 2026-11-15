@@ -1,0 +1,2 @@
+# HDD (disco giratório): BFQ mantém a interface responsiva durante cópias e atualizações.
+ACTION=="add|change", KERNEL=="sd[a-z]*", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq"

@@ -2,17 +2,17 @@
 componentName: dadarecoos
 welcomeStyleCalamares: false
 welcomeExpandingLogo: true
-windowExpanding: normal
-windowSize: 800px,520px
+windowExpanding: fullscreen
+windowSize: 1024px,640px
 windowPlacement: center
 
 strings:
   productName: DadarecoOS
   shortProductName: DadarecoOS
-  version: "0.1"
-  shortVersion: "0.1"
-  versionedName: "DadarecoOS 0.1"
-  shortVersionedName: "DadarecoOS 0.1"
+  version: "0.2"
+  shortVersion: "0.2"
+  versionedName: "DadarecoOS 0.2"
+  shortVersionedName: "DadarecoOS 0.2"
   bootloaderEntryName: DadarecoOS
   productUrl: https://github.com/arinascere/dadarecoos
   supportUrl: https://github.com/arinascere/dadarecoos/issues

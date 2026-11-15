@@ -6,7 +6,21 @@ on:
     tags: ["v*"]
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    container: debian:trixie
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scripts e nomes de pacote
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends python3-yaml curl ca-certificates >/dev/null
+          for f in auto/config config/hooks/normal/*.chroot config/includes.chroot/usr/lib/dadarecoos/*.sh; do bash -n "$f"; done
+          bash config/includes.chroot/usr/lib/dadarecoos/prepare-apt.sh
+          python3 tools/check-packages.py
+
   build:
+    needs: check
     runs-on: ubuntu-latest
     container:
       image: debian:trixie
@@ -15,11 +29,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Dependências
         run: |
-          apt-get update
-          apt-get install -y live-build git ca-certificates
+          apt-get update -qq
+          apt-get install -y --no-install-recommends live-build ca-certificates
       - name: Build
         run: |
-          # ponytail: sem cache de mirror. Build leva ~15-25 min. Adicionar apt-cacher se incomodar.
+          # ponytail: sem cache de mirror; cada build baixa tudo (~15-25 min). Adicionar apt-cacher se incomodar.
           lb config
           lb build
       - name: Nomear ISO
@@ -27,6 +41,7 @@ jobs:
           iso=$(ls *.iso | head -n1)
           mv "$iso" "dadarecoos-${GITHUB_REF_NAME}-amd64.iso"
           sha256sum dadarecoos-*.iso > SHA256SUMS
+          ls -la dadarecoos-*.iso
       - uses: actions/upload-artifact@v4
         with:
           name: dadarecoos-iso
@@ -34,9 +49,31 @@ jobs:
             dadarecoos-*.iso
             SHA256SUMS
 
+  boot-test:
+    # Liga a ISO numa máquina virtual e guarda capturas de tela: prova que o
+    # instalador sobe. Não substitui o teste no notebook de verdade.
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: dadarecoos-iso
+      - name: QEMU
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends qemu-system-x86 qemu-utils >/dev/null
+          sudo chmod 666 /dev/kvm
+          python3 tools/boot-test.py dadarecoos-*.iso shots
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: boot-screenshots
+          path: shots/
+
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
+    needs: [build, boot-test]
     runs-on: ubuntu-latest
     permissions:
       contents: write

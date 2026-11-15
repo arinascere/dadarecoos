@@ -1,6 +1,5 @@
 #!/bin/sh
-# Liga o instalador no boot do live e desativa o getty da tty1 (o cage usa a tty1).
+# Liga o instalador e a rede no boot do live.
 set -e
 systemctl enable dadareco-installer.service
 systemctl enable NetworkManager.service
-systemctl mask getty@tty1.service

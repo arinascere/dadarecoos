@@ -1,0 +1,12 @@
+{
+    "KPackageStructure": "Plasma/LookAndFeel",
+    "KPlugin": {
+        "Authors": [ { "Name": "DadarecoOS" } ],
+        "Description": "Barra no topo, dock flutuante embaixo, tema escuro com lavanda",
+        "Id": "org.dadarecoos.desktop",
+        "License": "GPL-3.0-or-later",
+        "Name": "DadarecoOS",
+        "Version": "0.2"
+    },
+    "X-Plasma-APIVersion": "2"
+}
