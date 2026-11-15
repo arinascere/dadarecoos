@@ -41,7 +41,7 @@ want grep -q PERCENT=60 "$T/etc/default/zramswap"
 want inroot test -e /etc/systemd/system/multi-user.target.wants/NetworkManager.service
 
 if chosen plasma; then
-	want test "$(readlink "$T/etc/systemd/system/display-manager.service")" = /usr/lib/systemd/system/sddm.service
+	want test "$(basename "$(readlink "$T/etc/systemd/system/display-manager.service")")" = sddm.service
 	want grep -q ButtonsOnLeft "$T/etc/xdg/kwinrc"
 	want grep -q blurEnabled=false "$T/etc/xdg/kwinrc"
 	want inroot test -x /usr/bin/plasma-apply-lookandfeel

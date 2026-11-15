@@ -1,0 +1,43 @@
+name: Install test
+
+# Instala cada combinação de escolhas numa pasta (sem o Calamares) e confere o resultado.
+# Chamado pelo Build ISO; também roda sozinho sobre a ISO de um build anterior.
+on:
+  workflow_call:
+    inputs:
+      run_id:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "ID do run do Build ISO cuja ISO será testada"
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  install-test:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:trixie
+      options: --privileged
+    strategy:
+      fail-fast: false
+      matrix:
+        choices: ["plasma touch games homelab", "niri touch homelab", "plasma"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: dadarecoos-iso
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Instalar e conferir
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends xorriso squashfs-tools python3-yaml ca-certificates >/dev/null
+          bash tools/install-test.sh dadarecoos-*.iso ${{ matrix.choices }}

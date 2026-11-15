@@ -73,26 +73,10 @@ jobs:
           path: shots/
 
   install-test:
-    # Instala cada combinação de escolhas numa pasta (sem o Calamares) e confere o resultado.
     needs: build
-    runs-on: ubuntu-latest
-    container:
-      image: debian:trixie
-      options: --privileged
-    strategy:
-      fail-fast: false
-      matrix:
-        choices: ["plasma touch games homelab", "niri touch homelab", "plasma"]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: dadarecoos-iso
-      - name: Instalar e conferir
-        run: |
-          apt-get update -qq
-          apt-get install -y -qq --no-install-recommends xorriso squashfs-tools python3-yaml ca-certificates >/dev/null
-          bash tools/install-test.sh dadarecoos-*.iso ${{ matrix.choices }}
+    uses: ./.github/workflows/install-test.yml
+    with:
+      run_id: ${{ github.run_id }}
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
