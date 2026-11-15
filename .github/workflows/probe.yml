@@ -1,0 +1,29 @@
+name: Probe
+on: workflow_dispatch
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    container: debian:trixie
+    steps:
+      - run: |
+          sed -i 's/^Components: main$/Components: main contrib non-free non-free-firmware/' /etc/apt/sources.list.d/debian.sources
+          echo 'deb http://deb.debian.org/debian trixie-backports main contrib non-free non-free-firmware' > /etc/apt/sources.list.d/bp.list
+          dpkg --add-architecture i386
+          apt-get update -qq
+          apt-get install -y -qq wget ca-certificates >/dev/null
+          wget -q https://pkg.noctalia.dev/deb/nickh-archive-keyring.deb && dpkg -i nickh-archive-keyring.deb
+          wget -q -O /etc/apt/sources.list.d/noctalia-trixie.sources https://pkg.noctalia.dev/deb/noctalia-trixie.sources
+          cat /etc/apt/sources.list.d/noctalia-trixie.sources
+          apt-get update -qq
+          echo "=== POLICY"
+          for p in niri xwayland-satellite noctalia noctalia-greeter noctalia-shell umbriel xdg-desktop-portal-umbriel greetd calamares calamares-settings-debian plasma-keyboard maliit-keyboard squeekboard wvkbd steam-installer plasma-desktop sddm kwin-wayland firmware-intel-graphics firmware-intel-sound firmware-sof-signed intel-media-va-driver-non-free i965-va-driver fonts-inter fonts-inter-variable zram-tools systemd-zram-generator iio-sensor-proxy cage foot live-build extrepo jellyfin tlp power-profiles-daemon grub-efi-ia32-bin nvidia-driver broadcom-sta-dkms firefox-esr fuzzel swaybg swaylock swayidle xdg-desktop-portal-gnome xdg-desktop-portal-gtk plasma-workspace-wayland plasma-workspace sddm-theme-breeze kde-config-sddm qt6-virtualkeyboard-plugin kde-spectacle ark gwenview okular brightnessctl thunar nautilus mpv; do
+            printf '%s: ' "$p"; apt-cache policy "$p" | awk '/Candidate/ {print $2}' | grep . || echo MISSING
+          done
+          echo "=== noctalia deps"; apt-cache depends noctalia || true
+          echo "=== niri anywhere"; apt-cache search niri | head -20
+          echo "=== calamares files"
+          cd /tmp && apt-get download calamares calamares-settings-debian -qq
+          for d in *.deb; do echo "## $d"; dpkg -c "$d" | awk '{print $6}' | grep -E 'modules/[a-z]+/$|settings|\.conf$|sbin|bin/' ; done
+          mkdir x && dpkg -x calamares-settings-debian*.deb x
+          for f in x/etc/calamares/settings.conf x/etc/calamares/modules/*.conf; do echo "## $f"; grep -v '^\s*#' "$f" | grep -v '^\s*$'; done
+          for f in x/usr/sbin/* x/usr/bin/*; do echo "## $f"; cat "$f"; done
