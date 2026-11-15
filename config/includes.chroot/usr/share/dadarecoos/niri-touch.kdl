@@ -1,0 +1,9 @@
+
+// DadarecoOS: ajustes de toque (anexado ao config padrão do niri).
+// ponytail: sem gesto de toque (o niri não tem); o teclado só abre pelo modo tablet.
+switch-events {
+    tablet-mode-on  { spawn "pkill" "-SIGUSR2" "wvkbd-mobintl"; }
+    tablet-mode-off { spawn "pkill" "-SIGUSR1" "wvkbd-mobintl"; }
+}
+spawn-at-startup "wvkbd-mobintl" "--hidden"
+spawn-at-startup "dadareco-auto-rotate"

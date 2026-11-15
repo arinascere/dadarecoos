@@ -1,0 +1,17 @@
+# artefatos do live-build
+/.build/
+/cache/
+/chroot/
+/binary/
+/local/
+*.iso
+*.contents
+*.files
+*.packages
+*.log
+live-image-*
+config/binary
+config/bootstrap
+config/chroot
+config/common
+config/source

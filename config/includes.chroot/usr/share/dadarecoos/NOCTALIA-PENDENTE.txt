@@ -1,0 +1,4 @@
+O Noctalia (shell do niri) não pôde ser instalado automaticamente.
+O niri funciona sem ele, mas sem barra/lançador.
+Instale seguindo https://docs.noctalia.dev/getting-started/installation
+(ele precisa do fork noctalia-qs do Quickshell, não o quickshell comum).

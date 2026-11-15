@@ -1,0 +1,54 @@
+# Sistema live = também a base copiada para o disco (squashfs). Mantém enxuto.
+
+# base
+systemd-sysv
+live-boot
+live-config
+linux-image-amd64
+sudo
+locales
+console-setup
+keyboard-configuration
+
+# bootloader (instalado no disco pelo Calamares)
+grub-efi-amd64
+grub-efi-amd64-bin
+grub-pc-bin
+efibootmgr
+
+# instalador (Wayland kiosk: cage + Calamares)
+calamares
+cage
+foot
+squashfs-tools
+rsync
+parted
+gdisk
+e2fsprogs
+dosfstools
+ntfs-3g
+cryptsetup
+
+# rede: precisa conectar ANTES de instalar (cabo, Wi-Fi ou tethering USB)
+network-manager
+wpasupplicant
+usb-modeswitch
+modemmanager
+wireless-regdb
+
+# firmwares: tudo que cobre rede, Bluetooth e vídeo comuns
+firmware-linux
+firmware-misc-nonfree
+firmware-iwlwifi
+firmware-realtek
+firmware-atheros
+firmware-brcm80211
+firmware-amd-graphics
+firmware-intel-graphics
+
+# detecção de hardware (usada por detect-hw.sh e post-install.sh)
+pciutils
+usbutils
+udev
+mokutil
+wvkbd

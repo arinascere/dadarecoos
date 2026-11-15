@@ -1,0 +1,51 @@
+name: Build ISO
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:trixie
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependências
+        run: |
+          apt-get update
+          apt-get install -y live-build git ca-certificates
+      - name: Build
+        run: |
+          # ponytail: sem cache de mirror. Build leva ~15-25 min. Adicionar apt-cacher se incomodar.
+          lb config
+          lb build
+      - name: Nomear ISO
+        run: |
+          iso=$(ls *.iso | head -n1)
+          mv "$iso" "dadarecoos-${GITHUB_REF_NAME}-amd64.iso"
+          sha256sum dadarecoos-*.iso > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dadarecoos-iso
+          path: |
+            dadarecoos-*.iso
+            SHA256SUMS
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dadarecoos-iso
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dadarecoos-*.iso
+            SHA256SUMS

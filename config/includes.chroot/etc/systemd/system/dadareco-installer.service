@@ -1,0 +1,21 @@
+[Unit]
+Description=DadarecoOS installer (cage + Calamares)
+After=systemd-user-sessions.service NetworkManager.service plymouth-quit-wait.service
+Conflicts=getty@tty1.service
+
+[Service]
+Type=simple
+# ponytail: roda como root com libseat builtin; Calamares precisa de root. Trocar por sessão logind se der problema.
+Environment=XDG_RUNTIME_DIR=/run/dadareco-xdg
+Environment=LIBSEAT_BACKEND=builtin
+Environment=WLR_NO_HARDWARE_CURSORS=1
+ExecStartPre=/usr/bin/install -d -m 0700 /run/dadareco-xdg
+ExecStartPre=/usr/lib/dadarecoos/detect-hw.sh
+ExecStart=/usr/bin/cage -s -- /usr/lib/dadarecoos/installer-wrapper.sh
+TTYPath=/dev/tty1
+StandardInput=tty
+StandardOutput=journal
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
