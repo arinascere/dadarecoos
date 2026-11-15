@@ -7,23 +7,34 @@ jobs:
     steps:
       - run: |
           sed -i 's/^Components: main$/Components: main contrib non-free non-free-firmware/' /etc/apt/sources.list.d/debian.sources
-          echo 'deb http://deb.debian.org/debian trixie-backports main contrib non-free non-free-firmware' > /etc/apt/sources.list.d/bp.list
-          dpkg --add-architecture i386
           apt-get update -qq
-          apt-get install -y -qq wget ca-certificates >/dev/null
-          wget -q https://pkg.noctalia.dev/deb/nickh-archive-keyring.deb && dpkg -i nickh-archive-keyring.deb
+          apt-get install -y -qq wget ca-certificates git binutils >/dev/null 2>&1
+          wget -q https://pkg.noctalia.dev/deb/nickh-archive-keyring.deb && dpkg -i nickh-archive-keyring.deb >/dev/null
           wget -q -O /etc/apt/sources.list.d/noctalia-trixie.sources https://pkg.noctalia.dev/deb/noctalia-trixie.sources
-          cat /etc/apt/sources.list.d/noctalia-trixie.sources
           apt-get update -qq
-          echo "=== POLICY"
-          for p in niri xwayland-satellite noctalia noctalia-greeter noctalia-shell umbriel xdg-desktop-portal-umbriel greetd calamares calamares-settings-debian plasma-keyboard maliit-keyboard squeekboard wvkbd steam-installer plasma-desktop sddm kwin-wayland firmware-intel-graphics firmware-intel-sound firmware-sof-signed intel-media-va-driver-non-free i965-va-driver fonts-inter fonts-inter-variable zram-tools systemd-zram-generator iio-sensor-proxy cage foot live-build extrepo jellyfin tlp power-profiles-daemon grub-efi-ia32-bin nvidia-driver broadcom-sta-dkms firefox-esr fuzzel swaybg swaylock swayidle xdg-desktop-portal-gnome xdg-desktop-portal-gtk plasma-workspace-wayland plasma-workspace sddm-theme-breeze kde-config-sddm qt6-virtualkeyboard-plugin kde-spectacle ark gwenview okular brightnessctl thunar nautilus mpv; do
-            printf '%s: ' "$p"; apt-cache policy "$p" | awk '/Candidate/ {print $2}' | grep . || echo MISSING
-          done
-          echo "=== noctalia deps"; apt-cache depends noctalia || true
-          echo "=== niri anywhere"; apt-cache search niri | head -20
-          echo "=== calamares files"
-          cd /tmp && apt-get download calamares calamares-settings-debian -qq
-          for d in *.deb; do echo "## $d"; dpkg -c "$d" | awk '{print $6}' | grep -E 'modules/[a-z]+/$|settings|\.conf$|sbin|bin/' ; done
-          mkdir x && dpkg -x calamares-settings-debian*.deb x
-          for f in x/etc/calamares/settings.conf x/etc/calamares/modules/*.conf; do echo "## $f"; grep -v '^\s*#' "$f" | grep -v '^\s*$'; done
-          for f in x/usr/sbin/* x/usr/bin/*; do echo "## $f"; cat "$f"; done
+          cd /tmp && apt-get download -qq calamares calamares-settings-debian noctalia noctalia-greeter noctalia-data live-build
+          echo "=== settings-debian modules"
+          mkdir s && dpkg -x calamares-settings-debian*.deb s
+          find s/usr/lib s/usr/bin -type f | while read f; do echo "## $f"; cat "$f"; echo; done
+          echo "=== calamares strings"
+          mkdir c && dpkg -x calamares_*.deb c
+          strings c/usr/lib/x86_64-linux-gnu/calamares/modules/packagechooser/*.so | grep -i -E 'netinstall|legacy|^packages$|optionalmultiple|default' | sort -u | head -20
+          strings c/usr/lib/x86_64-linux-gnu/libcalamares.so* | grep -E 'gs\[|ROOT' | sort -u | head
+          grep -n -i -E 'apt|install' c/usr/lib/x86_64-linux-gnu/calamares/modules/packages/main.py | sed -n 1,60p
+          apt-cache depends calamares-settings-debian calamares | grep -E 'Depends|Recommends'
+          echo "=== noctalia-greeter"
+          dpkg -I noctalia-greeter*.deb; dpkg -c noctalia-greeter*.deb | awk '{print $6}'
+          mkdir g && dpkg -e noctalia-greeter*.deb g; for f in g/*; do echo "## $f"; cat $f; done
+          mkdir gx && dpkg -x noctalia-greeter*.deb gx; find gx/etc gx/usr/share/doc gx/usr/lib/systemd -type f 2>/dev/null | while read f; do echo "## $f"; head -c 3000 "$f"; done
+          echo "=== noctalia files"
+          dpkg -c noctalia_*.deb | awk '{print $6}' | grep -v '/$'
+          dpkg -c noctalia-data*.deb | awk '{print $6}' | grep -v '/$' | grep -v -E '\.(png|svg|jpg|webp|ttf|wav|ogg)$' | head -80
+          mkdir n && dpkg -x noctalia_*.deb n && dpkg -x noctalia-data*.deb n
+          find n -name '*.service' -o -name '*.desktop' -o -name '*example*' -o -name '*.kdl' -o -name 'README*' | while read f; do echo "## $f"; head -c 4000 "$f"; done
+          n/usr/bin/noctalia --help 2>&1 | head -60 || true
+          echo "=== live-build efi"
+          mkdir l && dpkg -x live-build*.deb l; grep -n -E 'ia32|i386-efi' l/usr/lib/live/build/binary_grub-efi | head
+          echo "=== tags"
+          git ls-remote --tags --refs https://github.com/YaLTeR/niri | tail -4
+          git ls-remote --tags --refs https://github.com/Supreeeme/xwayland-satellite | tail -3
+          git clone -q --depth 1 https://github.com/YaLTeR/niri nr && cd nr && grep -n -A30 'metadata.deb' Cargo.toml; grep -n rust-version Cargo.toml; ls resources; grep -n -i -B2 -A12 'switch-events' resources/default-config.kdl | head -40; grep -rn -i -E 'input.method|text.input|virtual.keyboard' src/niri.rs | head -8
