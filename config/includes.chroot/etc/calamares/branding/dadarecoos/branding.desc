@@ -28,7 +28,7 @@ slideshow: "show.qml"
 slideshowAPI: 2
 
 style:
-  sidebarBackground: "#1e1e2e"
-  sidebarText: "#ffffff"
-  sidebarTextSelect: "#b4a7f5"
-  sidebarTextHighlight: "#313244"
+  SidebarBackground: "#1e1e2e"
+  SidebarText: "#cdd6f4"
+  SidebarTextCurrent: "#1e1e2e"
+  SidebarBackgroundCurrent: "#b4a7f5"

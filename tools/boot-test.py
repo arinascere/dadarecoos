@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Liga a ISO no QEMU (BIOS, 2 GB de RAM, rede) e salva capturas de tela.
 
-Uso: boot-test.py ARQUIVO.iso PASTA_SAIDA
+Uso: boot-test.py ARQUIVO.iso PASTA_SAIDA [uefi]
 Também imprime a última captura em base64 no log (entre marcas), para poder
 conferir sem baixar o artefato.
 """
@@ -11,8 +11,9 @@ iso, out = sys.argv[1], sys.argv[2]
 os.makedirs(out, exist_ok=True)
 qmp_path = "/tmp/qmp.sock"
 subprocess.run(["qemu-img", "create", "-f", "qcow2", "/tmp/disk.qcow2", "24G"], check=True)
+uefi = ["-bios", "/usr/share/ovmf/OVMF.fd"] if sys.argv[3:] == ["uefi"] else []
 vm = subprocess.Popen([
-    "qemu-system-x86_64", "-enable-kvm", "-cpu", "host", "-smp", "2", "-m", "2048",
+    "qemu-system-x86_64", *uefi, "-enable-kvm", "-cpu", "host", "-smp", "2", "-m", "2048",
     "-cdrom", iso, "-boot", "d", "-drive", "file=/tmp/disk.qcow2,if=virtio",
     "-nic", "user,model=virtio-net-pci", "-vga", "std", "-display", "none",
     "-serial", f"file:{out}/serial.log", "-qmp", f"unix:{qmp_path},server,nowait",

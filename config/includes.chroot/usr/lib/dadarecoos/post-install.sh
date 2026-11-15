@@ -26,7 +26,8 @@ has steam-installer && GAMES=1
 has samba           && HOMELAB=1
 
 # Hardware
-mem_mb=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)
+# DADARECO_MEM_MB: usado só pelo teste do CI para simular máquina fraca.
+mem_mb=${DADARECO_MEM_MB:-$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)}
 WEAK=0; [ "$mem_mb" -le 4200 ] && WEAK=1          # máquina fraca: 4 GB ou menos
 gpu=$(lspci -nn 2>/dev/null | grep -Ei 'vga|3d|display' || true)
 LAPTOP=0; ls /sys/class/power_supply/BAT* >/dev/null 2>&1 && LAPTOP=1
