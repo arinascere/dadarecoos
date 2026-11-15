@@ -55,22 +55,30 @@ O niri não existe no Debian 13. O workflow **Build packages** compila o niri e 
 
 ## O que é testado (CI)
 
+A cada build:
+
 - Todos os nomes de pacote existem nos repositórios (`tools/check-packages.py`).
 - O niri compilado instala num Debian 13 limpo e aceita o nosso `config.kdl`, com e sem os ajustes de toque.
-- A ISO é montada e ligada numa máquina virtual, com capturas de tela.
+- A ISO liga numa máquina virtual, em BIOS e em UEFI, até a tela do instalador com internet (`tools/boot-test.py`, com capturas de tela).
+- **Simulação de instalação** (`tools/install-test.sh`): o sistema da ISO é aberto numa pasta, recebe os pacotes de cada combinação com o mesmo comando do instalador e passa pelo `post-install.sh`. Combinações: `plasma`, `plasma + toque + jogos + homelab`, `niri + toque + homelab`. Tamanho instalado: 3,8 a 5,2 GB.
 
 ## Falta testar no aparelho
 
-- **Uma instalação completa.** O CI liga a ISO, mas não percorre o instalador até o fim.
+O CI não cobre nada disto:
+
+- **Uma instalação de ponta a ponta pelo Calamares**: particionar, gravar o GRUB e dar o primeiro boot no sistema instalado.
 - Toque: teclado virtual (Maliit no Plasma, Squeekboard no niri), rotação e o teclado dentro do instalador.
-- Layout do Plasma (`org.kde.plasma.desktop-layout.js`) e tela de login em Wayland.
-- Tela de login do niri (greetd + gtkgreet).
-- Wi-Fi do HP x360 e boot em UEFI.
+- Layout do Plasma (barra e dock) e tela de login em Wayland.
+- Tela de login do niri (greetd + gtkgreet) e o Noctalia em uso.
+- Wi-Fi do HP x360, vídeo acelerado e YouTube em 720p.
+
+Se algo falhar na instalação, o registro fica em `/var/log/dadarecoos-install.log` no sistema instalado.
 
 ## Limitações conhecidas
 
 - O repositório apt da DadarecoOS **não é assinado** (`trusted=yes`); depende do HTTPS do GitHub.
 - A tela de Wi-Fi do instalador (`nmtui`) precisa de teclado físico.
+- No niri, a tela de login não tem teclado virtual: precisa de teclado físico. O `noctalia-greeter` não instala no Debian 13 (pede bibliotecas gráficas mais novas).
 - O niri não tem gestos de toque. Para uso como tablet, prefira o Plasma.
 - Neste hardware o Jellyfin só serve bem em *direct play* (sem converter vídeo).
 - Marcar "Jogos" aceita a licença da Steam automaticamente.

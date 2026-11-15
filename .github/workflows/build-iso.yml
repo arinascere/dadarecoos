@@ -90,6 +90,8 @@ jobs:
           name: dadarecoos-iso
       - uses: softprops/action-gh-release@v2
         with:
+          prerelease: true
+          body: "Versão de teste. Ainda não foi instalada em hardware real. Veja o README para o que já é verificado pelo CI."
           files: |
             dadarecoos-*.iso
             SHA256SUMS
