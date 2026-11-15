@@ -64,7 +64,7 @@ O niri não existe no Debian 13. O workflow **Build packages** compila o niri e 
 - **Uma instalação completa.** O CI liga a ISO, mas não percorre o instalador até o fim.
 - Toque: teclado virtual (Maliit no Plasma, Squeekboard no niri), rotação e o teclado dentro do instalador.
 - Layout do Plasma (`org.kde.plasma.desktop-layout.js`) e tela de login em Wayland.
-- Tela de login do Noctalia (`greeter.toml`).
+- Tela de login do niri (greetd + gtkgreet).
 - Wi-Fi do HP x360 e boot em UEFI.
 
 ## Limitações conhecidas

@@ -40,7 +40,8 @@ systemctl disable dadareco-installer.service 2>/dev/null || true
 rm -f /etc/systemd/system/dadareco-installer.service \
       /etc/systemd/system/multi-user.target.wants/dadareco-installer.service
 gone=()
-for p in calamares calamares-settings-debian cage live-boot live-boot-initramfs-tools \
+[ "$NIRI" = 0 ] && has cage && gone+=(cage)      # no niri o cage hospeda a tela de login
+for p in calamares calamares-settings-debian live-boot live-boot-initramfs-tools \
 	live-config live-config-systemd live-tools; do
 	has "$p" && gone+=("$p")
 done
@@ -149,23 +150,33 @@ if [ "$NIRI" = 1 ]; then
 		install -m 0755 /usr/lib/dadarecoos/auto-rotate.sh /usr/local/bin/dadareco-auto-rotate
 		cat "$S/niri/touch.kdl" >> /etc/skel/.config/niri/config.kdl
 	fi
-	# Tela de login do Noctalia (greetd)
-	if id _greetd >/dev/null 2>&1; then
-		install -d -o _greetd -g _greetd /var/lib/noctalia-greeter
-		cat > /var/lib/noctalia-greeter/greeter.toml <<EOF
-[session]
-default = "niri"
-
-[appearance]
-theme_mode = "dark"
-font_family = "Inter"
-
-[appearance.wallpaper]
-path = "$WALL"
-fill_mode = "crop"
+	# Tela de login: greetd + gtkgreet dentro do cage.
+	# (O noctalia-greeter exige bibliotecas gráficas mais novas que as do Debian 13.)
+	# ponytail: sem teclado virtual nesta tela; login no niri precisa de teclado físico.
+	layout=$(. /etc/default/keyboard 2>/dev/null; echo "${XKBLAYOUT:-br}")
+	install -d /etc/greetd
+	echo "niri-session" > /etc/greetd/environments
+	cat > /etc/greetd/gtkgreet.css <<EOF
+window {
+    background-image: url("file://$WALL");
+    background-size: cover;
+    background-position: center;
+}
+box#body {
+    background-color: rgba(30, 30, 46, 0.88);
+    border-radius: 18px;
+    padding: 36px;
+}
+* { font-family: "Inter"; }
 EOF
-		chown _greetd:_greetd /var/lib/noctalia-greeter/greeter.toml
-	fi
+	cat > /etc/greetd/config.toml <<EOF
+[terminal]
+vt = 7
+
+[default_session]
+command = "env XKB_DEFAULT_LAYOUT=$layout cage -s -- gtkgreet -s /etc/greetd/gtkgreet.css"
+user = "_greetd"
+EOF
 	systemctl enable greetd.service || warn "não consegui habilitar o greetd"
 fi
 # As duas opções instaladas ao mesmo tempo não acontecem (escolha única no instalador).

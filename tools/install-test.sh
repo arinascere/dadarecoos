@@ -29,36 +29,39 @@ echo "== post-install"
 chroot "$T" env DADARECO_MEM_MB=3800 /usr/lib/dadarecoos/post-install.sh
 
 echo "== conferência"
-want test ! -e "$T/etc/systemd/system/dadareco-installer.service"
-want test ! -e "$T/usr/bin/calamares"
-want test ! -e "$T/usr/bin/cage"
+inroot() { chroot "$T" "$@"; }       # caminhos conferidos de dentro: links absolutos só valem lá
+want inroot test ! -e /etc/systemd/system/dadareco-installer.service
+want inroot test ! -e /usr/bin/calamares
+want inroot test -e /sbin/cryptsetup
 want sh -c "ls $T/boot/vmlinuz-* $T/boot/initrd.img-*"
 want chroot "$T" apt-get check
 want python3 -c "import json; json.load(open('$T/etc/firefox-esr/policies/policies.json'))"
 want grep -q vp9 "$T/etc/firefox-esr/policies/policies.json"        # sem GPU no CI = sem VP9
 want grep -q PERCENT=60 "$T/etc/default/zramswap"
-want test -e "$T/etc/systemd/system/multi-user.target.wants/NetworkManager.service"
+want inroot test -e /etc/systemd/system/multi-user.target.wants/NetworkManager.service
 
 if chosen plasma; then
 	want test "$(readlink "$T/etc/systemd/system/display-manager.service")" = /usr/lib/systemd/system/sddm.service
 	want grep -q ButtonsOnLeft "$T/etc/xdg/kwinrc"
 	want grep -q blurEnabled=false "$T/etc/xdg/kwinrc"
-	want test -e "$T/usr/bin/plasma-apply-lookandfeel"
-	want test -e "$T/usr/bin/kwin_wayland"
+	want inroot test -x /usr/bin/plasma-apply-lookandfeel
+	want inroot test -x /usr/bin/kwin_wayland
+	want inroot test ! -e /usr/bin/cage
 	want test ! -e "$T/etc/apt/sources.list.d/noctalia-trixie.sources"
 	if chosen touch; then
-		want test -e "$T/usr/share/applications/com.github.maliit.keyboard.desktop"
+		want inroot test -e /usr/share/applications/com.github.maliit.keyboard.desktop
 		want grep -q 'DOCK_HEIGHT = 72' "$T/usr/share/plasma/look-and-feel/org.dadarecoos.desktop/contents/layouts/org.kde.plasma.desktop-layout.js"
 	fi
 fi
 if chosen niri; then
 	want chroot "$T" niri validate -c /etc/skel/.config/niri/config.kdl
 	want chroot "$T" noctalia --version
-	want test -e "$T/etc/systemd/system/display-manager.service" -o -e "$T/etc/systemd/system/multi-user.target.wants/greetd.service" -o -e "$T/etc/systemd/system/graphical.target.wants/greetd.service"
-	want test -s "$T/var/lib/noctalia-greeter/greeter.toml"
+	want inroot test -e /etc/systemd/system/display-manager.service
+	want inroot sh -c 'command -v gtkgreet && command -v cage && command -v niri-session'
+	want grep -q gtkgreet "$T/etc/greetd/config.toml"
 	want test -e "$T/etc/apt/sources.list.d/dadarecoos.list"
 	if chosen touch; then
-		want test -x "$T/usr/bin/squeekboard"
+		want inroot test -x /usr/bin/squeekboard
 		want grep -q squeekboard "$T/etc/skel/.config/niri/config.kdl"
 	fi
 fi

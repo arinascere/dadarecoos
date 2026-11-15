@@ -29,6 +29,8 @@ fonts-inter
 fonts-dejavu-core
 qt6-virtualkeyboard-plugin
 squashfs-tools
+cryptsetup
+cryptsetup-initramfs
 os-prober
 btrfs-progs
 dosfstools
